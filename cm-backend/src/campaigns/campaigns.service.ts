@@ -19,19 +19,24 @@ export class CampaignsService implements OnModuleInit {
     console.log('✅ Connected to Supabase successfully');
   }
 
+  /**
+   * Creates a new campaign in the 'hc_campaigns' table
+   */
   async create(dto: CreateCampaignDto) {
-    // We map the DTO fields to match your 'hc_campaigns' table columns exactly
     const { data, error } = await this.supabase
-      .from('campaigns') 
+      .from('hc_campaigns') // Fixed: Matches your Supabase table name
       .insert([
         {
           title: dto.title,
           target_amount: dto.target_amount,
           description: dto.description,
-          collected_amount: 0, // Default start value
+          collected_amount: 0,
           cover_image_key: dto.cover_image_key || 'default_cover.jpg',
-          status: dto.status || 'Pending',
-          // Note: created_at is usually handled by Supabase automatically
+          // Fixed: Must be 'draft' or 'active' per your DB constraints
+          status: 'draft', 
+          // Fixed: Satisfies the NOT NULL constraint for created_by
+          created_by: '00000000-0000-0000-0000-000000000000', 
+          start_date: new Date().toISOString().split('T')[0],
         },
       ])
       .select();
@@ -44,9 +49,12 @@ export class CampaignsService implements OnModuleInit {
     return data[0];
   }
 
+  /**
+   * Fetches all campaigns from 'hc_campaigns'
+   */
   async findAll() {
     const { data, error } = await this.supabase
-      .from('campaigns')
+      .from('hc_campaigns') // Fixed: Was 'campaigns', now matches your DB
       .select('*')
       .order('created_at', { ascending: false });
 
